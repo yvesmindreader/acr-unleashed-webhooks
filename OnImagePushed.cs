@@ -22,7 +22,12 @@ namespace AcrUnleashed.Webhooks
             log.LogInformation("C# HTTP trigger function processed a request.");
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            log.LogInformation(requestBody);
             dynamic data = JsonConvert.DeserializeObject(requestBody);
+            if (data != null && "ping".Equals(data.action.ToString(), StringComparison.InvariantCultureIgnoreCase))
+            {
+                return new StatusCodeResult(204);
+            }
             if (data != null && data.request != null && data.target != null)
             {
                 await items.AddAsync(new ImagePush
@@ -30,7 +35,7 @@ namespace AcrUnleashed.Webhooks
                     Id = data.request.id,
                     LoginServer = data.request.host,
                     Action = data.action,
-                    TimeStamp = data.timestamp,
+                    TimeStamp = DateTime.UtcNow,
                     Image = data.target.repository,
                     Tag = data.target.tag
                 });
